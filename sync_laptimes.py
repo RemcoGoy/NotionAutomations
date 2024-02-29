@@ -50,10 +50,12 @@ def sync_laptimes():
         timing_props = header[3:]
 
         for row in tqdm(values):
-            track = row[0].strip("**")
+            track_name = row[0].strip("**")
 
             track_index = (
-                existing_tracks.index(track) if track in existing_tracks else -1
+                existing_tracks.index(track_name)
+                if track_name in existing_tracks
+                else -1
             )
 
             timing_properties = {
@@ -66,13 +68,16 @@ def sync_laptimes():
                 notion_client.pages.create(
                     parent={"database_id": DB_ID},
                     properties={
-                        "Name": {"title": [{"text": {"content": track}}]},
+                        "Name": {"title": [{"text": {"content": track_name}}]},
                         **timing_properties,
                     },
                 )
             else:
                 # Update
-                pass
+                existing_track = track_results["results"][track_index]
+                page_id = existing_track["id"]
+
+                notion_client.pages.update(page_id, properties={**timing_properties})
 
     except HttpError as err:
         print(err)
